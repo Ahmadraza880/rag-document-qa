@@ -1,6 +1,9 @@
 langchain
 langchain-groq
 langchain-community
+langchain-huggingface
+langchain-text-splitters
+langchain-classic
 chromadb
 streamlit
 pypdf
