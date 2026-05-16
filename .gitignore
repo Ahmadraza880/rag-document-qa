@@ -1,0 +1,9 @@
+.env
+chroma_sessions/
+chroma_db*/
+sessions.json
+__pycache__/
+*.pyc
+*.pickle
+*.bin
+*.sqlite3
