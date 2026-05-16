@@ -1,3 +1,13 @@
+---
+title: RAG Document Q&A
+emoji: 📄
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_file: app.py
+pinned: false
+---
+
 # 📄 RAG Document Q&A System
 
 <div align="center">
