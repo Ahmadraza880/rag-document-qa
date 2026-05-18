@@ -93,21 +93,29 @@ def update_session(session_id, data):
 
 # ---------- Document indexing ----------
 
-def add_document_to_session(session_id, pdf_path, filename):
+def add_document_to_session(session_id, file_bytes, filename):
     session = get_session(session_id)
     folder = session["chroma_folder"]
     os.makedirs(folder, exist_ok=True)
 
-    loader = PyPDFLoader(pdf_path)
+    # Write to /tmp with unique name
+    import uuid
+    tmp_path = f"/tmp/{uuid.uuid4().hex}_{filename}"
+    
+    with open(tmp_path, "wb") as f:
+        f.write(file_bytes)
+
+    loader = PyPDFLoader(tmp_path)
     documents = loader.load()
+
+    # Delete temp file immediately after loading
+    os.unlink(tmp_path)
 
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
         chunk_overlap=200
     )
     chunks = splitter.split_documents(documents)
-
-    # Filter empty chunks — this is why you get the error
     chunks = [c for c in chunks if c.page_content.strip()]
 
     if not chunks:
@@ -117,8 +125,6 @@ def add_document_to_session(session_id, pdf_path, filename):
         chunk.metadata["source_file"] = filename
 
     existing_docs = session.get("documents", [])
-
-    # Process in batches of 50 to avoid memory issues
     BATCH_SIZE = 50
 
     if existing_docs:
@@ -127,20 +133,16 @@ def add_document_to_session(session_id, pdf_path, filename):
             embedding_function=embeddings
         )
         for i in range(0, len(chunks), BATCH_SIZE):
-            batch = chunks[i:i + BATCH_SIZE]
-            vectorstore.add_documents(batch)
+            vectorstore.add_documents(chunks[i:i + BATCH_SIZE])
     else:
-        # First document — create from first batch
         first_batch = chunks[:BATCH_SIZE]
         vectorstore = Chroma.from_documents(
             documents=first_batch,
             embedding=embeddings,
             persist_directory=folder
         )
-        # Add remaining batches
         for i in range(BATCH_SIZE, len(chunks), BATCH_SIZE):
-            batch = chunks[i:i + BATCH_SIZE]
-            vectorstore.add_documents(batch)
+            vectorstore.add_documents(chunks[i:i + BATCH_SIZE])
 
     docs = existing_docs.copy()
     docs.append({
@@ -149,9 +151,7 @@ def add_document_to_session(session_id, pdf_path, filename):
         "chunks": len(chunks)
     })
     update_session(session_id, {"documents": docs})
-
     return len(documents), len(chunks)
-
 
 def load_session_vectorstore(session_id):
     session = get_session(session_id)

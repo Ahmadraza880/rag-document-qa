@@ -144,17 +144,11 @@ with left:
         if new_files:
             for file in new_files:
                 with st.spinner(f"Indexing {file.name}..."):
-                    with tempfile.NamedTemporaryFile(
-                        delete=False, suffix=".pdf"
-                    ) as tmp:
-                        tmp.write(file.read())
-                        tmp_path = tmp.name
-
+                    # Read bytes directly — no tempfile
+                    file_bytes = file.read()
                     add_document_to_session(
-                        session_id, tmp_path, file.name
+                        session_id, file_bytes, file.name
                     )
-                    os.unlink(tmp_path)
-
             st.success(f"Added {len(new_files)} document(s)!")
             st.rerun()
 
