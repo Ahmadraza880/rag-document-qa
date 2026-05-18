@@ -15,8 +15,10 @@ from langchain_community.vectorstores import Chroma
 from langchain_classic.chains import RetrievalQA
 from langchain_classic.prompts import PromptTemplate
 
-SESSIONS_FILE = "./sessions.json"
-CHROMA_BASE = "./chroma_sessions"
+
+import tempfile
+SESSIONS_FILE = "/tmp/sessions.json"
+CHROMA_BASE = "/tmp/chroma_sessions"
 
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
